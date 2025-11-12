@@ -49,10 +49,25 @@ body{
 .Products h4{
   color: #996666;
   padding-top: 1.5em;
- text-decoration: underline; j
+ text-decoration: underline; 
 }
-@media (max-width: 600px){
+@media (min-width: 800px){
  .card1,.card2{
    height: 40em;
+ }
+}
+@media (min-width: 1000px){
+ .card1,.card2{
+   height: 60em;
+ }
+}
+@media (min-width: 1200px){
+ .card1,.card2{
+   height: 80em;
+ }
+}
+@media (min-width: 1400px){
+ .card1,.card2{
+   height: 100em;
  }
 }
