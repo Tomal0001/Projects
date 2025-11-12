@@ -51,8 +51,8 @@ body{
   padding-top: 1.5em;
  text-decoration: underline; j
 }
-@media (max width: 1000px){
- .navbar{
+@media (max width: 600px){
+ .card1,.card2{
    height: 40em;
  }
 }
