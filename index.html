@@ -288,6 +288,261 @@
         }
     </script>
 </body>
+</html>
+            border: 4px solid #000;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        /* Top HUD Bar */
+        .ui-header {
+            position: absolute;
+            top: 15px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 10;
+        }
+
+        .badge {
+            background-color: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        /* Character Container - 30% Smaller */
+        .character-container {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 210px;  /* Reduced 30% from 300px */
+            height: 315px; /* Reduced 30% from 450px */
+            cursor: pointer;
+            z-index: 5;
+            outline: none;
+        }
+
+        .character-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            pointer-events: auto;
+            /* Pivot point localized around the lower back/rear area */
+            transform-origin: 70% 60%;
+            outline: none;
+        }
+
+        /* Ass-Only Bounce/Shake Animation */
+        .slapped {
+            animation: ass-jiggle 0.25s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes ass-jiggle {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(6deg) scaleX(1.08) scaleY(0.95); }
+            50% { transform: rotate(-4deg) scaleX(0.96) scaleY(1.02); }
+            75% { transform: rotate(2deg) scaleX(1.02); }
+            100% { transform: rotate(0deg) scale(1); }
+        }
+
+        /* Animated Floating Text (OUCH / SLAP) */
+        .hit-text {
+            position: absolute;
+            font-size: 2.2rem;
+            color: #ff0033;
+            text-shadow: 2px 2px 0px #fff, -2px -2px 0px #fff, 2px -2px 0px #fff, -2px 2px 0px #fff, 3px 3px 0px #000;
+            pointer-events: none;
+            animation: pop-up 0.45s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes pop-up {
+            0% { opacity: 1; transform: translateY(0) scale(0.5) rotate(-10deg); }
+            50% { transform: translateY(-30px) scale(1.2) rotate(10deg); }
+            100% { opacity: 0; transform: translateY(-60px) scale(1) rotate(0deg); }
+        }
+
+        /* Modals for Level Up / Finish */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            border: 4px solid #000;
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            width: 80%;
+            box-shadow: 6px 6px 0px #ff3366;
+        }
+
+        .modal-title {
+            font-size: 2.2rem;
+            color: #000;
+            margin-bottom: 15px;
+        }
+
+        .modal-btn {
+            background-color: #ffcc00;
+            border: 3px solid #000;
+            padding: 10px 24px;
+            font-size: 1.2rem;
+            font-family: inherit;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 3px 3px 0px #000;
+        }
+
+        .modal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container" id="gameContainer">
+        <div class="ui-header">
+            <div class="badge" id="levelDisplay">LEVEL 1</div>
+            <div class="badge" id="slapDisplay">SLAPS: 0</div>
+        </div>
+
+        <div class="character-container" id="characterBox">
+            <img id="characterImg" class="character-img" src="IMG_20260903_155207-removebg-preview.png" alt="Character">
+        </div>
+
+        <div class="modal" id="gameModal">
+            <div class="modal-content">
+                <h2 class="modal-title" id="modalText">LEVEL UP!</h2>
+                <button class="modal-btn" id="modalBtn" onclick="closeModal()">CONTINUE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File Paths
+        const HAPPY_IMG = "IMG_20260903_155207-removebg-preview.png";
+        const SAD_IMG = "IMG_20260903_155154-removebg-preview.png";
+        const SLAP_AUDIO_SRC = "classic_hurt_7UuVwoL.mp3";
+
+        let slaps = 0;
+        let level = 1;
+        const maxLevel = 10;
+        const slapsPerLevel = 10;
+        let expressionTimeout;
+
+        const characterImg = document.getElementById('characterImg');
+        const characterBox = document.getElementById('characterBox');
+        const slapDisplay = document.getElementById('slapDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const gameModal = document.getElementById('gameModal');
+        const modalText = document.getElementById('modalText');
+        const modalBtn = document.getElementById('modalBtn');
+        const gameContainer = document.getElementById('gameContainer');
+
+        // Preload Audio
+        const hurtSound = new Audio(SLAP_AUDIO_SRC);
+
+        function playHurtSound() {
+            // Clone audio node to allow overlapping rapid clicks
+            const soundClone = hurtSound.cloneNode();
+            soundClone.currentTime = 0;
+            soundClone.play().catch(() => {});
+        }
+
+        // Slap Event Listener
+        characterBox.addEventListener('click', (e) => {
+            slaps++;
+            slapDisplay.textContent = `SLAPS: ${slaps}`;
+
+            // Play the audio file
+            playHurtSound();
+
+            // Switch expression to sad
+            characterImg.src = SAD_IMG;
+
+            // Trigger targeted ass-shake animation
+            characterImg.classList.remove('slapped');
+            void characterImg.offsetWidth; // Reflow reset
+            characterImg.classList.add('slapped');
+
+            // Floating text
+            createHitEffect(e.clientX, e.clientY);
+
+            // Revert expression to happy after 600ms
+            clearTimeout(expressionTimeout);
+            expressionTimeout = setTimeout(() => {
+                characterImg.src = HAPPY_IMG;
+            }, 600);
+
+            // Check level status
+            if (slaps % slapsPerLevel === 0) {
+                if (level < maxLevel) {
+                    level++;
+                    showModal(`LEVEL UP!\nLEVEL ${level}`, "CONTINUE");
+                } else {
+                    showModal("GAME FINISHED!", "PLAY AGAIN");
+                }
+            }
+        });
+
+        function createHitEffect(x, y) {
+            const rect = gameContainer.getBoundingClientRect();
+            const hit = document.createElement('div');
+            hit.className = 'hit-text';
+            hit.textContent = Math.random() > 0.5 ? 'OUCH!' : 'SLAP!';
+            hit.style.left = `${x - rect.left - 40}px`;
+            hit.style.top = `${y - rect.top - 30}px`;
+            gameContainer.appendChild(hit);
+
+            setTimeout(() => hit.remove(), 450);
+        }
+
+        function showModal(text, buttonText) {
+            modalText.innerText = text;
+            modalBtn.textContent = buttonText;
+            gameModal.classList.add('active');
+        }
+
+        function closeModal() {
+            gameModal.classList.remove('active');
+            if (modalBtn.textContent === "PLAY AGAIN") {
+                slaps = 0;
+                level = 1;
+                slapDisplay.textContent = `SLAPS: 0`;
+                levelDisplay.textContent = `LEVEL 1`;
+                characterImg.src = HAPPY_IMG;
+            } else {
+                levelDisplay.textContent = `LEVEL ${level}`;
+            }
+        }
+    </script>
+</body>
 </html></body>
 </html> point localized around the lower back/rear area */
             transform-origin: 70% 60%;
