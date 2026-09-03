@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Slap Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SQUAT SLAP GAME</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,7 +12,7 @@
             user-select: none;
             -webkit-user-select: none;
             -webkit-touch-callout: none;
-            -webkit-tap-highlight-color: transparent; /* Removes blue click highlight */
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -20,56 +20,57 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #0d0d0d;
+            background-color: #1a1a1a;
             font-family: 'Impact', 'Arial Black', sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
         }
 
-        /* Game Screen Window */
         /* Full Screen Container for Mobile */
-.game-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    max-width: 100%;
-    max-height: 100%;
-    background: url('1788429839470.jpg') no-repeat center center;
-    background-size: cover;
-    overflow: hidden;
-    border: none;
-    border-radius: 0;
-}
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
+            background: url('1788429839470.jpg') no-repeat center center;
+            background-size: cover;
+            overflow: hidden;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
 
-
-        /* Top HUD Bar */
+        /* UI Overlay - Top Area */
         .ui-header {
             position: absolute;
-            top: 15px;
+            top: 20px;
             left: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 15px;
+            padding: 0 20px;
             z-index: 10;
         }
 
         .badge {
             background-color: #ffffff;
-            border: 3px solid #000000;
-            border-radius: 20px;
-            padding: 6px 16px;
-            font-size: 1.2rem;
+            border: 4px solid #000000;
+            border-radius: 25px;
+            padding: 8px 20px;
+            font-size: 1.4rem;
             letter-spacing: 1px;
-            box-shadow: 3px 3px 0px #000;
+            box-shadow: 5px 5px 0px #000;
         }
 
-        /* Character Container - 30% Smaller */
+        /* Character Container - Original size maintained */
         .character-container {
             position: absolute;
-            bottom: 40px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
-            width: 210px;  /* Reduced 30% from 300px */
-            height: 315px; /* Reduced 30% from 450px */
+            width: 210px;
+            height: 315px;
             cursor: pointer;
             z-index: 5;
             outline: none;
@@ -80,12 +81,11 @@
             height: 100%;
             object-fit: contain;
             pointer-events: auto;
-            /* Pivot point localized around the lower back/rear area */
             transform-origin: 70% 60%;
             outline: none;
         }
 
-        /* Ass-Only Bounce/Shake Animation */
+        /* Ass-Only Bounce/Shake Animation - Maintain size and speed */
         .slapped {
             animation: ass-jiggle 0.25s cubic-bezier(.36,.07,.19,.97) both;
         }
@@ -98,7 +98,7 @@
             100% { transform: rotate(0deg) scale(1); }
         }
 
-        /* Animated Floating Text (OUCH / SLAP) */
+        /* Animated Floating Text (OUCH / SLAP) - Size maintained */
         .hit-text {
             position: absolute;
             font-size: 2.2rem;
@@ -139,34 +139,36 @@
 
         .modal-content {
             background-color: #fff;
-            border: 4px solid #000;
-            border-radius: 16px;
+            border: 6px solid #000;
+            border-radius: 20px;
             padding: 30px 20px;
             text-align: center;
-            width: 80%;
-            box-shadow: 6px 6px 0px #ff3366;
+            width: 85%;
+            box-shadow: 8px 8px 0px #ff3366;
         }
 
         .modal-title {
-            font-size: 2.2rem;
+            font-size: 2.8rem;
             color: #000;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
         }
 
         .modal-btn {
             background-color: #ffcc00;
-            border: 3px solid #000;
-            padding: 10px 24px;
-            font-size: 1.2rem;
+            border: 4px solid #000;
+            padding: 12px 30px;
+            font-size: 1.4rem;
             font-family: inherit;
             cursor: pointer;
-            border-radius: 10px;
-            box-shadow: 3px 3px 0px #000;
+            border-radius: 12px;
+            box-shadow: 5px 5px 0px #000;
+            text-transform: uppercase;
         }
 
         .modal-btn:active {
-            transform: translate(2px, 2px);
-            box-shadow: 1px 1px 0px #000;
+            transform: translate(3px, 3px);
+            box-shadow: 2px 2px 0px #000;
         }
     </style>
 </head>
@@ -191,7 +193,7 @@
     </div>
 
     <script>
-        // File Paths
+        // File Paths with Exact Names from GitHub Repository
         const HAPPY_IMG = "IMG_20260903_155207-removebg-preview.png";
         const SAD_IMG = "IMG_20260903_155154-removebg-preview.png";
         const SLAP_AUDIO_SRC = "classic_hurt_7UuVwoL.mp3";
@@ -201,6 +203,7 @@
         const maxLevel = 10;
         const slapsPerLevel = 10;
         let expressionTimeout;
+        let lastClickTime = 0;
 
         const characterImg = document.getElementById('characterImg');
         const characterBox = document.getElementById('characterBox');
@@ -223,6 +226,15 @@
 
         // Slap Event Listener
         characterBox.addEventListener('click', (e) => {
+            // Anti-Double Click Zoom System
+            const currentTime = new Date().getTime();
+            const clickDifference = currentTime - lastClickTime;
+            lastClickTime = currentTime;
+            if (clickDifference < 300) {
+                // If clicked twice very rapidly, ignore the second slap logic
+                return;
+            }
+
             slaps++;
             slapDisplay.textContent = `SLAPS: ${slaps}`;
 
@@ -257,6 +269,7 @@
             }
         });
 
+        // Floating Text Logic - size and animation maintained
         function createHitEffect(x, y) {
             const rect = gameContainer.getBoundingClientRect();
             const hit = document.createElement('div');
@@ -269,6 +282,7 @@
             setTimeout(() => hit.remove(), 450);
         }
 
+        // Modal Logic
         function showModal(text, buttonText) {
             modalText.innerText = text;
             modalBtn.textContent = buttonText;
